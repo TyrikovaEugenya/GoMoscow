@@ -2,9 +2,84 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Стартовая страница</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoMoscow — Активный отдых в Москве</title>
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .placemark-info {
+            max-width: 300px;
+            font-family: Arial, sans-serif;
+        }
+        .placemark-info h3 {
+            margin: 0 0 8px 0;
+            color: #000;
+        }
+        .placemark-info p {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .placemark-info img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Здесь будет карта</h1>
+    <div id="map"></div>
+
+    <!-- Подключение Yandex Maps API -->
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=2d1c2b41-6a31-4528-b648-d9c67264abee&lang=ru_RU" type="text/javascript"></script>
+
+    <script>
+        ymaps.ready(init);
+
+        function init() {
+            const map = new ymaps.Map('map', {
+                center: [55.7558, 37.6176],
+                zoom: 11,
+                controls: ['zoomControl', 'fullscreenControl']
+            });
+
+            fetch('/api/places/')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(place => {
+                        const balloonContent = `
+                            <div class="placemark-info">
+                                <h3>${place.name}</h3>
+                                <p>${place.description}</p>
+                                ${place.image_url ? `<img src="${place.image_url}" alt="">` : ''}
+                            </div>
+                        `;
+
+                        const placemark = new ymaps.Placemark(
+                            [place.latitude, place.longitude],
+                            {
+                                balloonContent: balloonContent,
+                                hintContent: place.name
+                            },
+                            {
+                                preset: 'islands#icon',
+                                iconColor: '#0095b6'
+                            }
+                        );
+
+                        // Добавляем метку на карту
+                        map.geoObjects.add(placemark);
+                    });
+                })
+                .catch(err => {
+                    console.error('Ошибка загрузки данных:', err);
+                    alert('Не удалось загрузить места активного отдыха.');
+                });
+        }
+    </script>
 </body>
 </html>
